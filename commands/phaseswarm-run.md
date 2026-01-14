@@ -112,7 +112,11 @@ Only show projects where `project_root` matches the current working directory. T
 
 ```
 cwd = current working directory
-Filter projects where: project.project_root === cwd OR cwd.startsWith(project.project_root + "/")
+Filter projects where:
+  - project.project_root exists (skip if empty)
+  - project.project_root === cwd
+  - OR cwd is under project_root
+  - OR project_root is under cwd (user is in parent directory)
 ```
 
 **If registry exists and has matching projects:**

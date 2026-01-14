@@ -213,9 +213,10 @@ function list(showAll = false) {
     let filteredProjects = registry.projects;
     if (!showAll) {
       filteredProjects = registry.projects.filter(project => {
-        // Match if cwd equals project_root, or cwd is under project_root
         const projectRoot = project.project_root || '';
-        return projectRoot === cwd || cwd.startsWith(projectRoot + path.sep);
+        if (!projectRoot) return false; // Skip projects without project_root
+        // Match if cwd equals project_root, cwd is under project_root, or project_root is under cwd
+        return projectRoot === cwd || cwd.startsWith(projectRoot + path.sep) || projectRoot.startsWith(cwd + path.sep);
       });
     }
 
