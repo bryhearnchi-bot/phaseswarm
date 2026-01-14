@@ -174,12 +174,15 @@ function init() {
 
 /**
  * List registered PhaseSwarm projects
+ * @param {boolean} showAll - Show all projects regardless of cwd
  */
-function list() {
+function list(showAll = false) {
   console.log('');
   log('PhaseSwarm Projects', 'cyan');
   log('===================', 'cyan');
   console.log('');
+
+  const cwd = process.cwd();
 
   try {
     if (!fs.existsSync(REGISTRY_FILE)) {
@@ -206,10 +209,38 @@ function list() {
       return;
     }
 
+    // Filter projects by current working directory (unless --all flag)
+    let filteredProjects = registry.projects;
+    if (!showAll) {
+      filteredProjects = registry.projects.filter(project => {
+        const projectRoot = project.project_root || '';
+        if (!projectRoot) return false; // Skip projects without project_root
+        // Match if cwd equals project_root, cwd is under project_root, or project_root is under cwd
+        return projectRoot === cwd || cwd.startsWith(projectRoot + path.sep) || projectRoot.startsWith(cwd + path.sep);
+      });
+    }
+
     // Sort by last_accessed (most recent first)
-    const sortedProjects = [...registry.projects].sort((a, b) => {
+    const sortedProjects = [...filteredProjects].sort((a, b) => {
       return new Date(b.last_accessed || 0) - new Date(a.last_accessed || 0);
     });
+
+    if (sortedProjects.length === 0) {
+      logInfo(`No PhaseSwarm projects found for this directory.`);
+      console.log(`   Current directory: ${cwd}`);
+      console.log('');
+      console.log(`Use ${colors.cyan}phaseswarm list --all${colors.reset} to see all projects.`);
+      console.log('');
+      return;
+    }
+
+    if (!showAll) {
+      console.log(`Showing projects for: ${colors.cyan}${cwd}${colors.reset}`);
+      console.log('');
+    } else {
+      console.log(`${colors.yellow}(Showing all projects)${colors.reset}`);
+      console.log('');
+    }
 
     for (let i = 0; i < sortedProjects.length; i++) {
       const project = sortedProjects[i];
@@ -229,7 +260,11 @@ function list() {
       }
 
       console.log(`${colors.bold}${num}. ${project.name}${colors.reset} ${colors[statusColor]}${statusIcon}${colors.reset}`);
-      console.log(`   Path: ${project.path}`);
+      console.log(`   PhaseSwarm: ${project.path}`);
+
+      if (showAll && project.project_root) {
+        console.log(`   Project root: ${project.project_root}`);
+      }
 
       if (project.last_accessed) {
         const date = new Date(project.last_accessed);
@@ -244,6 +279,9 @@ function list() {
     }
 
     console.log(`${colors.cyan}Registry: ${REGISTRY_FILE}${colors.reset}`);
+    if (!showAll && registry.projects.length > sortedProjects.length) {
+      console.log(`${colors.yellow}(${registry.projects.length - sortedProjects.length} other projects hidden - use --all to see all)${colors.reset}`);
+    }
     console.log('');
 
   } catch (err) {
@@ -260,12 +298,19 @@ function help() {
   log('PhaseSwarm - Multi-phase, multi-agent execution planning for Claude Code', 'cyan');
   console.log('');
   console.log('Usage:');
-  console.log('  phaseswarm <command>');
+  console.log('  phaseswarm <command> [options]');
   console.log('');
   console.log('Commands:');
   console.log(`  ${colors.green}init${colors.reset}     Install PhaseSwarm commands to .claude/commands/`);
-  console.log(`  ${colors.green}list${colors.reset}     List all registered PhaseSwarm projects`);
+  console.log(`  ${colors.green}list${colors.reset}     List PhaseSwarm projects for current directory`);
   console.log(`  ${colors.green}help${colors.reset}     Show this help message`);
+  console.log('');
+  console.log('Options:');
+  console.log(`  ${colors.yellow}--all, -a${colors.reset}  Show all projects (for 'list' command)`);
+  console.log('');
+  console.log('Examples:');
+  console.log('  phaseswarm list          List projects for current directory');
+  console.log('  phaseswarm list --all    List all registered projects');
   console.log('');
   console.log('After installation, use these commands in Claude Code:');
   console.log(`  ${colors.blue}/phaseswarm-create${colors.reset}  Create a new PhaseSwarm from a PRD`);
@@ -279,6 +324,9 @@ function help() {
 const args = process.argv.slice(2);
 const command = args[0] || 'help';
 
+// Check for --all flag
+const hasAllFlag = args.includes('--all') || args.includes('-a');
+
 switch (command.toLowerCase()) {
   case 'init':
   case 'install':
@@ -288,7 +336,7 @@ switch (command.toLowerCase()) {
   case 'list':
   case 'ls':
   case 'projects':
-    list();
+    list(hasAllFlag);
     break;
 
   case 'help':
