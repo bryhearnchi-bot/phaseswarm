@@ -89,11 +89,15 @@ for cmd in "${COMMANDS[@]}"; do
     # Check if target already exists
     if [ -f "$target_file" ]; then
         print_warning "$cmd already exists"
-        read -p "  Overwrite? [y/N] " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            print_status "Skipping $cmd"
-            continue
+        if [ -t 0 ]; then
+            read -p "  Overwrite? [y/N] " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                print_status "Skipping $cmd"
+                continue
+            fi
+        else
+            print_status "Non-interactive mode, overwriting $cmd"
         fi
     fi
 
