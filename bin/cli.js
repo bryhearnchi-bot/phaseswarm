@@ -189,7 +189,14 @@ function list() {
     }
 
     const content = fs.readFileSync(REGISTRY_FILE, 'utf8');
-    const registry = JSON.parse(content);
+    let registry;
+    try {
+      registry = JSON.parse(content);
+    } catch (err) {
+      logError(`Registry file is corrupted: ${err.message}`);
+      logInfo('Recreate with: phaseswarm init');
+      process.exit(1);
+    }
 
     if (!registry.projects || registry.projects.length === 0) {
       logInfo('No projects registered yet.');
@@ -264,7 +271,7 @@ function help() {
   console.log(`  ${colors.blue}/phaseswarm-create${colors.reset}  Create a new PhaseSwarm from a PRD`);
   console.log(`  ${colors.blue}/phaseswarm-run${colors.reset}     Execute an existing PhaseSwarm`);
   console.log('');
-  console.log('Learn more: https://github.com/USER/phaseswarm');
+  console.log('Learn more: https://github.com/bryhearnchi-bot/phaseswarm');
   console.log('');
 }
 

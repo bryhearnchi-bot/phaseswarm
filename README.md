@@ -33,7 +33,7 @@ PhaseSwarm is a methodology and toolset for breaking down large projects into ma
 ### Option 1: Quick Install (curl)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/YOUR-USERNAME/phaseswarm/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/bryhearnchi-bot/phaseswarm/main/install.sh | bash
 ```
 
 ### Option 2: NPX (Node.js)
@@ -434,5 +434,5 @@ Contributions welcome! Please open an issue or PR on GitHub.
 
 ## Support
 
-- GitHub Issues: [Report a bug](https://github.com/YOUR-USERNAME/phaseswarm/issues)
-- Discussions: [Ask questions](https://github.com/YOUR-USERNAME/phaseswarm/discussions)
+- GitHub Issues: [Report a bug](https://github.com/bryhearnchi-bot/phaseswarm/issues)
+- Discussions: [Ask questions](https://github.com/bryhearnchi-bot/phaseswarm/discussions)

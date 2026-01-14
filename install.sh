@@ -4,7 +4,7 @@
 # Multi-phase, multi-agent execution planning for Claude Code
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/USER/phaseswarm/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/bryhearnchi-bot/phaseswarm/main/install.sh | bash
 #   OR
 #   ./install.sh
 #
@@ -56,7 +56,7 @@ REGISTRY_FILE="$HOME/.phaseswarm-registry.json"
 COMMANDS=("phaseswarm-create.md" "phaseswarm-run.md")
 
 # GitHub raw URL base (for curl install)
-GITHUB_RAW_BASE="https://raw.githubusercontent.com/USER/phaseswarm/main"
+GITHUB_RAW_BASE="https://raw.githubusercontent.com/bryhearnchi-bot/phaseswarm/main"
 
 echo ""
 echo "======================================"
@@ -191,5 +191,5 @@ echo ""
 echo "Commands installed to: ${GREEN}$CLAUDE_DIR${NC}"
 echo "Registry location: ${GREEN}$REGISTRY_FILE${NC}"
 echo ""
-echo "For more info: https://github.com/USER/phaseswarm"
+echo "For more info: https://github.com/bryhearnchi-bot/phaseswarm"
 echo ""
