@@ -36,13 +36,7 @@ PhaseSwarm is a methodology and toolset for breaking down large projects into ma
 curl -fsSL https://raw.githubusercontent.com/bryhearnchi-bot/phaseswarm/main/install.sh | bash
 ```
 
-### Option 2: NPX (Node.js)
-
-```bash
-npx phaseswarm init
-```
-
-### Option 3: Manual Install
+### Option 2: Manual Install
 
 1. Create the commands directory in your project:
    ```bash
