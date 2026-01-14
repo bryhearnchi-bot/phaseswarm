@@ -1,0 +1,33 @@
+{
+  "name": "phaseswarm",
+  "version": "1.0.0",
+  "description": "Multi-phase, multi-agent execution planning for Claude Code",
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bryhearnchi-bot/phaseswarm.git"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai",
+    "agent",
+    "multi-agent",
+    "orchestration",
+    "prd",
+    "planning"
+  ],
+  "bin": {
+    "phaseswarm": "./bin/cli.js"
+  },
+  "files": [
+    "bin/",
+    "commands/",
+    "install.sh",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
