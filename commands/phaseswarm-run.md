@@ -106,25 +106,35 @@ Every session, do this FIRST:
 
 Read the registry to see all available PhaseSwarm projects.
 
-**If registry exists and has projects:**
+**IMPORTANT: Filter by current working directory**
 
-Show the user a list:
+Only show projects where `project_root` matches the current working directory. This ensures users only see projects relevant to the codebase they're currently in.
+
 ```
-Which PhaseSwarm project do you want to work on?
+cwd = current working directory
+Filter projects where: project.project_root === cwd OR cwd.startsWith(project.project_root + "/")
+```
 
-1. [Project Name] - Phase 3/5 in progress - /path/to/folder
+**If registry exists and has matching projects:**
+
+Show the user a list of projects for this directory:
+```
+PhaseSwarm projects for this directory:
+
+1. [Project Name] - Phase 3/5 in progress
    Last accessed: 2026-01-10
 
-2. [Another Project] - Phase 1/8 in progress - /path/to/folder
+2. [Another Project] - Phase 1/8 in progress
    Last accessed: 2026-01-08
 
-3. [Third Project] - Complete! - /path/to/folder
-   Last accessed: 2026-01-05
-
-4. Other - Specify a different folder
+3. Other - Specify a different folder
 ```
 
 Use AskUserQuestion to let them pick.
+
+**If registry exists but NO projects match the current directory:**
+
+Tell user: "No PhaseSwarm projects found for this directory. Would you like to specify a PhaseSwarm folder manually, or run `/phaseswarm-create` to create a new one?"
 
 **If registry doesn't exist or is empty:**
 
@@ -132,7 +142,7 @@ Ask user: "No PhaseSwarm projects found in registry. Where is your PhaseSwarm fo
 
 **If they pick "Other":**
 
-Ask for the folder path, then offer to add it to the registry.
+Ask for the folder path, then offer to add it to the registry. When adding, set `project_root` to the current working directory.
 
 ### Step 1b: Check Branch Status
 
@@ -479,7 +489,8 @@ After the user answers ANY question:
 ```
 START SESSION:
   Read ~/.phaseswarm-registry.json
-  → Ask which project
+  → Filter projects by current working directory (project_root)
+  → Ask which project (only show matching projects)
   → Check branch: current vs registry's working_branch
   → If different: ask user to switch or stay
   → Update last_accessed
@@ -526,6 +537,7 @@ COMPLETE PHASE:
 ## START NOW
 
 1. Read `~/.phaseswarm-registry.json`
-2. Show user their projects, ask which one
-3. Load that project's files
-4. Find incomplete features → Confirm batch → **DELEGATE TO AGENTS**
+2. Filter to projects matching current working directory (`project_root`)
+3. Show user their projects for this directory, ask which one
+4. Load that project's files
+5. Find incomplete features → Confirm batch → **DELEGATE TO AGENTS**

@@ -466,10 +466,21 @@ Add the new project to the registry:
       "total_phases": [N],
       "prd_source": "[path to original PRD]",
       "working_branch": "[branch name if new branch was created, or current branch]",
-      "project_root": "[path to the project being worked on, for git operations]"
+      "project_root": "[CURRENT WORKING DIRECTORY - see note below]"
     }
   ]
 }
+```
+
+**IMPORTANT: `project_root` field**
+
+The `project_root` field is CRITICAL for filtering. Set it to the **current working directory** (where the user ran `/phaseswarm-create`). This ensures:
+- `/phaseswarm-run` only shows projects relevant to the current codebase
+- Users don't accidentally pick the wrong project when working in different directories
+- The registry stays organized even with many projects across different codebases
+
+```
+project_root = current working directory (e.g., /Users/name/projects/my-app)
 ```
 
 If branch_strategy was "New branch", create the branch now and store its name.
