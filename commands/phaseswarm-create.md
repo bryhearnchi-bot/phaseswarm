@@ -81,7 +81,13 @@ Before creating the CLAUDE.md, ask the user these questions to customize how the
    - "Per batch" - Commit after each parallel batch
    - "Per phase" - One commit per phase
 
-7. User Check-ins
+7. Phase Completion Git Action
+   - "Commit only" - Just commit after phase testing is complete
+   - "Commit and push" - Commit and push to remote after phase testing
+   - "Commit, push, and PR" - Commit, push, and create a pull request after each phase
+   - "Ask each time" - Ask me what to do after each phase
+
+8. User Check-ins
    - "Frequent" - Confirm before every action
    - "Moderate" - Confirm before batches, not individual features
    - "Minimal" - Only confirm at phase boundaries
@@ -89,35 +95,35 @@ Before creating the CLAUDE.md, ask the user these questions to customize how the
 
 ### Question Set 4: Code Quality Checks
 ```
-8. TypeScript Checking (if applicable)
+9. TypeScript Checking (if applicable)
    - "After each feature" - Run tsc after every feature
    - "After each batch" - Run tsc after parallel batch completes
    - "After each phase" - Run tsc once per phase
    - "Never" - Skip TypeScript checks
    - "N/A" - Not a TypeScript project
 
-9. Linting
-   - "After each feature" - Run lint after every feature
-   - "After each batch" - Run lint after parallel batch completes
-   - "After each phase" - Run lint once per phase
-   - "Never" - Skip linting
+10. Linting
+    - "After each feature" - Run lint after every feature
+    - "After each batch" - Run lint after parallel batch completes
+    - "After each phase" - Run lint once per phase
+    - "Never" - Skip linting
 
-10. Lint/TypeCheck Commands (free text)
+11. Lint/TypeCheck Commands (free text)
     - What command runs your linter? (e.g., "npm run lint", "pnpm lint")
     - What command runs TypeScript check? (e.g., "npm run typecheck", "tsc --noEmit")
 
-11. Dev Server Command (free text)
+12. Dev Server Command (free text)
     - What command starts your dev server? (e.g., "npm run dev", "pnpm dev")
     - This will be used to restart the server before user testing phases
 ```
 
 ### Question Set 5: Project Context
 ```
-12. Do you have a reference project to match? (V1/existing version)
+13. Do you have a reference project to match? (V1/existing version)
     - "Yes" - I'll ask for the path
     - "No" - Building from scratch
 
-13. What's the V2/target project path?
+14. What's the V2/target project path?
     (Free text response)
 ```
 
@@ -125,7 +131,7 @@ If they have a reference project, ask for the path.
 
 ### Question Set 6: Agent Environment & Tools
 ```
-14. MCP Servers
+15. MCP Servers
     Ask: "Do you have MCP servers configured that agents should use?"
     - "Yes" - I'll ask which ones
     - "No" - Skip this
@@ -135,7 +141,7 @@ If they have a reference project, ask for the path.
 
     These will be documented in CLAUDE.md so agents know they're available.
 
-15. Available Skills
+16. Available Skills
     Ask: "Are there existing skills/slash commands agents should know about?"
     - "Yes" - I'll ask which ones
     - "No" - Skip this
@@ -143,7 +149,7 @@ If they have a reference project, ask for the path.
     If yes, ask: "Which skills should agents be able to use? (comma-separated)"
     Examples: "commit, review-pr, frontend-design"
 
-16. Additional Instructions
+17. Additional Instructions
     Ask: "Any additional rules or instructions you want ALL agents to follow?"
 
     Free text - user can add:
@@ -192,6 +198,7 @@ This is the master instructions file. Customize based on their answers:
 - **Code Review**: [their answer]
 - **Branch Strategy**: [their answer]
 - **Commit Frequency**: [their answer]
+- **Phase Completion Git**: [their answer - commit_only, commit_push, commit_push_pr, or ask]
 - **Check-in Level**: [their answer]
 
 ### Code Quality
@@ -336,6 +343,7 @@ After asking ANY question and receiving an answer:
     "code_review": "[their answer]",
     "branch_strategy": "[their answer]",
     "commit_frequency": "[their answer]",
+    "phase_completion_git": "[commit_only|commit_push|commit_push_pr|ask]",
     "checkin_level": "[their answer]",
     "typescript_checking": "[their answer]",
     "linting": "[their answer]",

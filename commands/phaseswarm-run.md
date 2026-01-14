@@ -372,12 +372,49 @@ When all features in a phase have `passes: true`:
 3. Wait for user to test
 4. User confirms testing complete
 5. Set `user_verified: true`
-6. Then update phases.json and continue
+6. **Handle git actions** (see "Phase Completion Git Actions" below)
+7. Then update phases.json and continue
 
 **"Ask each time"**:
 1. Ask: "Phase [N] complete. Should I continue to Phase [N+1] or wait for your testing?"
 2. If they want to test: Restart server (same as "Stop and verify")
-3. Follow their preference
+3. After user confirms testing: **Handle git actions** (see below)
+4. Follow their preference
+
+### Phase Completion Git Actions
+
+**IMPORTANT:** After user confirms testing is complete, handle git based on `phase_completion_git` config:
+
+**"commit_only"**:
+```bash
+git add .
+git commit -m "Complete Phase [N]: [Phase Name]"
+```
+
+**"commit_push"**:
+```bash
+git add .
+git commit -m "Complete Phase [N]: [Phase Name]"
+git push
+```
+
+**"commit_push_pr"**:
+```bash
+git add .
+git commit -m "Complete Phase [N]: [Phase Name]"
+git push
+gh pr create --title "Phase [N]: [Phase Name]" --body "Completed features:\n[list features]"
+```
+Return the PR URL to the user.
+
+**"ask"**:
+Ask user: "Phase [N] testing complete. What would you like to do?"
+- Commit only
+- Commit and push
+- Commit, push, and create PR
+- Skip git actions
+
+Then execute their choice.
 
 ### Update phases.json:
 
@@ -529,6 +566,12 @@ REPEAT:
 COMPLETE PHASE:
   Based on phase_mode config
   Run phase-level lint/typecheck if configured
+  User tests → confirms complete
+  → Git action based on phase_completion_git config:
+    - commit_only: commit
+    - commit_push: commit + push
+    - commit_push_pr: commit + push + create PR
+    - ask: ask user what to do
   Update registry status when project complete
 ```
 
