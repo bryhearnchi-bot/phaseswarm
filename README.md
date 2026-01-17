@@ -20,7 +20,7 @@ PhaseSwarm is a methodology and toolset for breaking down large projects into ma
 - **Parallel agent orchestration**: Build 2-4 features simultaneously using Task agents
 - **Progress tracking**: JSON-based task tracking with `passes: true/false` status
 - **Configurable workflow**: Customize testing, commits, branching, and check-in frequency
-- **Project registry**: Track multiple PhaseSwarm projects across your system
+- **Project registry**: Local or global registry to track PhaseSwarm projects
 - **Branch tracking**: Automatically remembers and restores your working branch
 - **Code quality checks**: Configurable TypeScript and lint checking
 - **MCP & Skills integration**: Make your tools available to agents
@@ -70,9 +70,13 @@ curl -fsSL https://raw.githubusercontent.com/bryhearnchi-bot/phaseswarm/main/ins
    cp commands/phaseswarm-run.md .claude/commands/
    ```
 
-3. Create the global registry (optional, created automatically on first use):
+3. Create a registry (optional, created automatically on first use):
    ```bash
-   echo '{"registry_version": 1, "projects": []}' > ~/.phaseswarm-registry.json
+   # Local registry (for this project only)
+   echo '{"registry_version": 1, "registry_type": "local", "projects": []}' > ./.phaseswarm-registry.json
+
+   # OR Global registry (for all projects)
+   echo '{"registry_version": 1, "registry_type": "global", "projects": []}' > ~/.phaseswarm-registry.json
    ```
 
 ### Verify Installation
@@ -110,7 +114,7 @@ This will:
 3. Ask 16 configuration questions (see below)
 4. Analyze your PRD and identify phases
 5. Create the folder structure with all necessary files
-6. Register the project in your global registry
+6. Register the project in your registry (local or global)
 
 ### Step 3: Run the PhaseSwarm
 
@@ -203,11 +207,23 @@ your-project/
 └── ...
 ```
 
-Global registry at `~/.phaseswarm-registry.json` tracks all your projects:
+### Registry Location
+
+During `phaseswarm init`, you choose where to store the registry:
+
+| Type | Location | Use Case |
+|------|----------|----------|
+| **Local** | `./.phaseswarm-registry.json` | Project isolation - only this project's PhaseSwarms tracked |
+| **Global** | `~/.phaseswarm-registry.json` | Cross-project tracking - all PhaseSwarms in one place |
+
+**Local registries take precedence** - if both exist, local is used.
+
+Registry structure:
 
 ```json
 {
   "registry_version": 1,
+  "registry_type": "local",
   "projects": [
     {
       "name": "My Project",
