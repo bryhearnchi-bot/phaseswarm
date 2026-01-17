@@ -34,16 +34,26 @@ PhaseSwarm is a methodology and toolset for breaking down large projects into ma
 
 ## Installation
 
-### Option 1: Quick Install (curl)
+### Option 1: Install from GitHub (Recommended)
+
+```bash
+# Install globally from GitHub
+npm install -g github:bryhearnchi-bot/phaseswarm
+
+# Then run in any project:
+phaseswarm init
+```
+
+Or use npx directly without installing:
+
+```bash
+npx github:bryhearnchi-bot/phaseswarm init
+```
+
+### Option 2: Quick Install (curl)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/bryhearnchi-bot/phaseswarm/main/install.sh | bash
-```
-
-### Option 2: NPX (Node.js)
-
-```bash
-npx phaseswarm init
 ```
 
 ### Option 3: Manual Install
@@ -417,17 +427,24 @@ If stuck on a feature after multiple attempts:
 
 ## CLI Commands
 
-After installing via npm:
+After installing via `npm install -g github:bryhearnchi-bot/phaseswarm`:
 
 ```bash
 # Install commands to current project
 phaseswarm init
 
-# List all registered projects
+# List all registered projects (filtered by current directory)
 phaseswarm list
 
 # Show help
 phaseswarm help
+```
+
+Or use npx without global install:
+
+```bash
+npx github:bryhearnchi-bot/phaseswarm init
+npx github:bryhearnchi-bot/phaseswarm list
 ```
 
 ---
