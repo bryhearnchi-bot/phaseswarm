@@ -25,6 +25,8 @@ If they choose custom location, ask for the path.
 [chosen-location]/
 ├── CLAUDE.md                 ← Master instructions
 ├── phases.json               ← Phase registry
+├── progress.md               ← Session progress checkpoint
+├── [original-prd-name].md    ← Source PRD (copied)
 ├── phase-1-[name].md         ← Phase 1 rules
 ├── phase-1-[name].json       ← Phase 1 tasks
 ├── phase-2-[name].md         ← Phase 2 rules
@@ -34,6 +36,8 @@ If they choose custom location, ask for the path.
 ```
 
 Wait for their response. Read the PRD file they provide.
+
+**After reading the PRD:** Copy the original PRD file into the PhaseSwarm folder, preserving its original filename. This becomes the "source of truth" that agents can reference throughout the project lifecycle.
 
 ---
 
@@ -211,6 +215,21 @@ This is the master instructions file. Customize based on their answers:
 ### Project Paths
 - **Reference Project**: [path or "None"]
 - **Target Project**: [path]
+- **Source PRD**: `./[original-prd-filename]`
+
+---
+
+## Source of Truth
+
+The original PRD is preserved at: `./[original-prd-filename]`
+
+**When to consult the PRD:**
+- When requirements are unclear
+- When making design decisions
+- When prioritizing features
+- When validating acceptance criteria
+
+Agents should reference this document when questions arise during implementation.
 
 ---
 
@@ -327,6 +346,45 @@ After asking ANY question and receiving an answer:
 4. ✅ If no: Continue to next workflow step
 
 **NEVER end a turn without either delegating work or explicitly stating why there's nothing to delegate.**
+
+---
+
+## Session Start Protocol
+
+Every session, follow this startup sequence:
+
+1. **Read progress.md** - Understand prior work and session context
+2. **Run `git log --oneline -10`** - See recent commits for context
+3. **Read phases.json** - Check current phase status
+4. **Read phase-N.json** - Find incomplete features
+5. **Run `git status`** - Check for uncommitted changes
+6. **Run quality checks** - Verify baseline is green before starting
+7. Continue from incomplete features
+
+If context was compacted/reset, this protocol ensures rapid re-orientation.
+
+---
+
+## Ralph Loop Integration
+
+If running via `/ralph-loop`, this project supports autonomous continuation:
+- Progress persists in phases.json and progress.md
+- Git commits track all changes
+- On context reset, read progress.md first
+
+**Completion promise:** Output `<promise>PHASE_COMPLETE</promise>` when current phase is done.
+
+### If Context Resets:
+1. Read `progress.md` for session context
+2. Read `phases.json` for current phase/status
+3. Read `phase-N.json` for incomplete features
+4. Continue from "In Progress" items in progress.md
+
+### If Stuck:
+After 3 failed attempts on the same feature:
+1. Document what was tried in progress.md
+2. Move to next feature
+3. Notify user of blocked items at phase end
 ```
 
 ### 4b. Create phases.json
@@ -336,6 +394,7 @@ After asking ANY question and receiving an answer:
   "project": "[Name from PRD]",
   "created": "[today's date]",
   "last_updated": "[today's date]",
+  "prd_local_path": "[filename of PRD copy in this folder]",
   "config": {
     "phase_mode": "[their answer]",
     "agent_level": "[their answer]",
@@ -385,12 +444,52 @@ Make any requested changes.
 
 **DELEGATE file creation to agents in parallel.** Do NOT create files yourself.
 
-### 6a. Create the folder structure first
+### 6a. Create the folder structure and copy PRD
 ```bash
 mkdir -p [phaseswarm-folder]/completed
 ```
 
-### 6b. Launch parallel agents to create files
+**Copy the PRD file** into the PhaseSwarm folder, preserving its original filename:
+```bash
+cp [prd-path] [phaseswarm-folder]/[original-filename]
+```
+
+### 6b. Create progress.md (checkpoint file)
+
+Create the initial progress checkpoint file:
+
+```markdown
+# PhaseSwarm Progress Log
+
+## Last Updated: [today's date and time]
+
+### Current Phase: 1 - [Phase Name]
+
+### Session Status
+- **Status**: Starting new PhaseSwarm project
+- **Branch**: [branch name]
+
+### Completed This Session:
+(None yet)
+
+### In Progress:
+(None yet - ready to start Phase 1)
+
+### Next Up:
+[List first 3-4 features from Phase 1]
+
+### Session Notes:
+- Project initialized from PRD: [prd-filename]
+- Configuration complete, ready to begin execution
+
+### If Context Resets:
+1. Read this file for session context
+2. Read phases.json for current phase/status
+3. Read phase-N.json for incomplete features
+4. Continue from "In Progress" items above
+```
+
+### 6c. Launch parallel agents to create files
 
 In a SINGLE message, launch multiple Task agents:
 
@@ -435,11 +534,11 @@ Task(
 # Launch as many as needed - one agent per phase
 ```
 
-### 6c. Create CLAUDE.md and phases.json yourself
+### 6d. Create CLAUDE.md and phases.json yourself
 
 These are small config files that need the full context from all the questions. Create them directly with Write tool while agents work on phase files.
 
-### 6d. Wait for agents to complete
+### 6e. Wait for agents to complete
 
 All phase files will be created in parallel, much faster than sequential creation.
 
@@ -473,6 +572,7 @@ Add the new project to the registry:
       "current_phase": 1,
       "total_phases": [N],
       "prd_source": "[path to original PRD]",
+      "prd_local_path": "[filename of PRD copy in phaseswarm folder]",
       "working_branch": "[branch name if new branch was created, or current branch]",
       "project_root": "[CURRENT WORKING DIRECTORY - see note below]"
     }

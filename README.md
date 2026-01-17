@@ -25,21 +25,35 @@ PhaseSwarm is a methodology and toolset for breaking down large projects into ma
 - **Code quality checks**: Configurable TypeScript and lint checking
 - **MCP & Skills integration**: Make your tools available to agents
 - **Reference matching**: Optionally compare against a V1/reference implementation
+- **PRD as source of truth**: Original PRD is copied into the project for agent reference
+- **Context window resilience**: Progress checkpoints enable recovery after context resets
+- **Ralph Loop compatible**: Supports autonomous long-running execution with `/ralph-loop`
+- **Verification before completion**: Quality checks must pass before marking features done
 
 ---
 
 ## Installation
 
-### Option 1: Quick Install (curl)
+### Option 1: Install from GitHub (Recommended)
+
+```bash
+# Install globally from GitHub
+npm install -g github:bryhearnchi-bot/phaseswarm
+
+# Then run in any project:
+phaseswarm init
+```
+
+Or use npx directly without installing:
+
+```bash
+npx github:bryhearnchi-bot/phaseswarm init
+```
+
+### Option 2: Quick Install (curl)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/bryhearnchi-bot/phaseswarm/main/install.sh | bash
-```
-
-### Option 2: NPX (Node.js)
-
-```bash
-npx phaseswarm init
 ```
 
 ### Option 3: Manual Install
@@ -178,6 +192,8 @@ your-project/
 ├── phaseswarm/                      # or custom folder name
 │   ├── CLAUDE.md                    # Master instructions (read every session)
 │   ├── phases.json                  # Phase registry and config
+│   ├── progress.md                  # Session checkpoint (updated after each batch)
+│   ├── my-project-prd.md            # Original PRD (copied, source of truth)
 │   ├── phase-1-foundation.md        # Phase 1 rules
 │   ├── phase-1-foundation.json      # Phase 1 tasks
 │   ├── phase-2-features.md          # Phase 2 rules
@@ -197,6 +213,8 @@ Global registry at `~/.phaseswarm-registry.json` tracks all your projects:
       "name": "My Project",
       "path": "/path/to/phaseswarm",
       "project_root": "/path/to/project",
+      "prd_source": "/path/to/original-prd.md",
+      "prd_local_path": "my-project-prd.md",
       "working_branch": "phaseswarm/my-project",
       "current_phase": 3,
       "total_phases": 8,
@@ -243,7 +261,8 @@ Global registry at `~/.phaseswarm-registry.json` tracks all your projects:
 │  │  │                  v                                  │  │  │
 │  │  │  ┌─────────────────────────────────────────────┐   │  │  │
 │  │  │  │  TypeScript Check → Lint → Browser Test     │   │  │  │
-│  │  │  │  → Update JSON → Commit (based on config)   │   │  │  │
+│  │  │  │  → VERIFY → Update JSON → Write Checkpoint  │   │  │  │
+│  │  │  │  → Commit (based on config)                 │   │  │  │
 │  │  │  └─────────────────────────────────────────────┘   │  │  │
 │  │  └─────────────────────────────────────────────────────┘  │  │
 │  │                         │                                  │  │
@@ -310,19 +329,122 @@ For "branch per phase" strategy, PhaseSwarm automatically creates new branches w
 
 ---
 
+## Context Window Resilience
+
+PhaseSwarm is designed to handle context window limits gracefully. If Claude's context is compacted or reset, the system can recover:
+
+### Progress Checkpoint (`progress.md`)
+
+After each agent batch completes, PhaseSwarm updates a checkpoint file:
+
+```markdown
+# PhaseSwarm Progress Log
+
+## Last Updated: 2026-01-17 14:30
+
+### Current Phase: 2 - API Development
+
+### Completed This Session:
+- [x] Feature 2.1: User authentication endpoint
+- [x] Feature 2.2: Token refresh endpoint
+
+### In Progress:
+- [ ] Feature 2.3: Password reset flow
+
+### Next Up:
+- Feature 2.4: OAuth integration
+- Feature 2.5: Rate limiting
+
+### Session Notes:
+- Discovered existing auth utils at src/lib/auth.ts
+- Using JWT with 1hr expiry as specified in PRD
+
+### If Context Resets:
+1. Read this file for session context
+2. Read phases.json for current phase/status
+3. Read phase-N.json for incomplete features
+4. Continue from "In Progress" items
+```
+
+### Session Start Protocol
+
+Every session follows a startup checklist:
+
+1. **Read progress.md** - Understand prior work and session context
+2. **Run `git log --oneline -10`** - See recent commits for context
+3. **Read phases.json** - Check current phase status
+4. **Read phase-N.json** - Find incomplete features
+5. **Run `git status`** - Check for uncommitted changes
+6. **Run quality checks** - Verify baseline is green
+7. Continue from incomplete features
+
+### PRD as Source of Truth
+
+The original PRD is copied into the PhaseSwarm folder during creation. Agents can reference it when:
+- Requirements are unclear
+- Making design decisions
+- Prioritizing features
+- Validating acceptance criteria
+
+---
+
+## Ralph Loop Integration
+
+PhaseSwarm is compatible with the [Ralph Wiggum plugin](https://github.com/anthropics/claude-code/blob/main/plugins/ralph-wiggum/README.md) for autonomous long-running execution.
+
+### How It Works
+
+```bash
+# Start autonomous execution
+/ralph-loop "/phaseswarm-run" --max-iterations 50 --completion-promise "PHASE_COMPLETE"
+```
+
+PhaseSwarm outputs `<promise>PHASE_COMPLETE</promise>` when a phase finishes, allowing Ralph to detect completion.
+
+### State Persistence
+
+Between iterations:
+- Progress persists in `progress.md` and phase JSON files
+- Git commits track all changes
+- On context reset, PhaseSwarm reads `progress.md` first
+
+### Recovery Protocol
+
+If context is compacted mid-session:
+1. Read `progress.md` for session context
+2. Read `phases.json` for current phase status
+3. Read `phase-N.json` for incomplete features
+4. Continue from "In Progress" items
+
+### Escape Hatch
+
+If stuck on a feature after multiple attempts:
+1. Document what was tried in `progress.md`
+2. Move to next feature
+3. Notify user of blocked items at phase end
+
+---
+
 ## CLI Commands
 
-After installing via npm:
+After installing via `npm install -g github:bryhearnchi-bot/phaseswarm`:
 
 ```bash
 # Install commands to current project
 phaseswarm init
 
-# List all registered projects
+# List all registered projects (filtered by current directory)
 phaseswarm list
 
 # Show help
 phaseswarm help
+```
+
+Or use npx without global install:
+
+```bash
+npx github:bryhearnchi-bot/phaseswarm init
+npx github:bryhearnchi-bot/phaseswarm list
 ```
 
 ---

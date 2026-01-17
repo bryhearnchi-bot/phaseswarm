@@ -50,6 +50,7 @@ Context:
 - Target file: [path]
 - Reference: [V1 path if applicable]
 - Rules: Read phaseswarm/phase-{N}.md
+- Source PRD: [phaseswarm-folder]/[prd-filename]
 
 Requirements:
 [List from acceptance_criteria in JSON]
@@ -68,17 +69,24 @@ Available Skills (from config):
 Project-Specific Rules:
 [Include any additional_instructions from config]
 
+If Unclear Requirements:
+- Read the source PRD at: [phaseswarm-folder]/[prd-filename]
+- Look for relevant context in the original requirements
+- If still unclear, document the ambiguity and ask the orchestrator
+
 DO:
 - Match the reference exactly
 - Follow the phase rules
 - Complete all acceptance criteria
 - Use available MCP tools when helpful
 - Follow project-specific rules
+- Consult the PRD for unclear requirements
 
 DO NOT:
 - Redesign or "improve"
 - Add unrequested features
 - Skip any criteria
+- Make assumptions when PRD has the answer
 """
 )
 ```
@@ -96,9 +104,49 @@ Task(subagent_type="general-purpose", prompt="Build Feature C...")
 
 ---
 
+## SESSION INITIALIZATION PROTOCOL
+
+**Follow this startup checklist every session to ensure rapid orientation:**
+
+```
+╔══════════════════════════════════════════════════════════════════╗
+║  SESSION START CHECKLIST                                         ║
+║                                                                  ║
+║  1. Read progress.md - Understand prior work and session context ║
+║  2. Run git log --oneline -10 - See recent commits               ║
+║  3. Read phases.json - Check current phase status                ║
+║  4. Read phase-N.json - Find incomplete features                 ║
+║  5. Run git status - Check for uncommitted changes               ║
+║  6. Run quality checks - Verify baseline is green                ║
+║  7. Continue from incomplete features                            ║
+╚══════════════════════════════════════════════════════════════════╝
+```
+
+If context was compacted/reset, this protocol ensures you can quickly resume.
+
+---
+
 ## STARTUP SEQUENCE
 
 Every session, do this FIRST:
+
+### Step 0: Read Progress Checkpoint
+
+**First**, read `progress.md` in the PhaseSwarm folder (if it exists):
+```
+Read: [phaseswarm-folder]/progress.md
+```
+
+This tells you:
+- What was completed in the last session
+- What's currently in progress
+- Any session notes or discoveries
+- How to recover if context was reset
+
+Also read recent git history for additional context:
+```bash
+git log --oneline -10
+```
 
 ### Step 1: Read the PhaseSwarm Registry
 
@@ -313,7 +361,28 @@ Check `browser_testing` in CLAUDE.md:
 - **Skip browser**: Move directly to update
 - **Ask each time**: Ask user preference
 
-### After Testing: Update JSON
+### After Testing: Verify Before Marking Complete
+
+**IMPORTANT:** Before marking a feature as complete, verify it passes quality checks:
+
+1. Run the configured quality checks (TypeScript/lint)
+2. If browser testing is enabled, verify the feature works
+3. If tests exist for this feature, run them
+4. Only mark `passes: true` if all verification passes
+
+```
+VERIFICATION CHECKLIST:
+[ ] Quality checks pass (tsc/lint if configured)
+[ ] Browser test passes (if configured)
+[ ] Feature tests pass (if they exist)
+[ ] Feature matches acceptance criteria
+```
+
+If verification fails, keep `passes: false` and either:
+- Fix the issue (delegate to agent)
+- Note the failure in progress.md for later
+
+### After Verification: Update JSON
 
 For each passing feature:
 
@@ -327,6 +396,41 @@ For each passing feature:
 ```
 
 **DO THIS IMMEDIATELY. Don't batch updates.**
+
+### After Updating: Write Progress Checkpoint
+
+**After each agent batch completes**, update `progress.md`:
+
+```markdown
+# PhaseSwarm Progress Log
+
+## Last Updated: [current date and time]
+
+### Current Phase: [N] - [Phase Name]
+
+### Completed This Session:
+- [x] Feature [ID]: [Description]
+- [x] Feature [ID]: [Description]
+
+### In Progress:
+- [ ] Feature [ID]: [Description] (just completed by agents)
+
+### Next Up:
+- Feature [ID]: [Description]
+- Feature [ID]: [Description]
+
+### Session Notes:
+- [Any discoveries, decisions, or important context]
+- [Reference files found, patterns noticed, etc.]
+
+### If Context Resets:
+1. Read this file for session context
+2. Read phases.json for current phase/status
+3. Read phase-N.json for incomplete features
+4. Continue from "In Progress" items above
+```
+
+**This checkpoint enables recovery if context is compacted.**
 
 ### After Updating: Commit (based on config)
 
@@ -525,10 +629,31 @@ After the user answers ANY question:
 
 ---
 
+## RALPH LOOP COMPATIBILITY
+
+If running via `/ralph-loop`, this workflow supports autonomous continuation:
+
+**Completion Promise:** Output `<promise>PHASE_COMPLETE</promise>` when current phase is done.
+
+**State Persistence:**
+- Progress persists in `progress.md` and phase JSON files
+- Git commits track all changes
+- On context reset, read `progress.md` first
+
+**Recovery Protocol:**
+1. Read `progress.md` for session context
+2. Read `phases.json` for current phase status
+3. Read `phase-N.json` for incomplete features
+4. Continue from "In Progress" items
+
+---
+
 ## QUICK REFERENCE
 
 ```
 START SESSION:
+  Read progress.md (if exists) - session context
+  Run git log --oneline -10 - recent commits for context
   Read ~/.phaseswarm-registry.json
   → Filter projects by current working directory (project_root)
   → Ask which project (only show matching projects)
@@ -557,9 +682,21 @@ CODE QUALITY:
 BROWSER TEST:
   Based on browser_testing config
 
+VERIFY:
+  Run quality checks (tsc/lint)
+  Run feature tests if they exist
+  Only mark complete if verification passes
+
 UPDATE:
   Set passes: true in JSON (immediately!)
   Update registry current_phase if needed
+
+CHECKPOINT:
+  Update progress.md after each agent batch:
+  - Completed features
+  - In progress items
+  - Session notes
+  - Recovery instructions
 
 COMMIT:
   Based on commit_frequency config
@@ -583,8 +720,12 @@ COMPLETE PHASE:
 
 ## START NOW
 
-1. Read `~/.phaseswarm-registry.json`
-2. Filter to projects matching current working directory (`project_root`)
-3. Show user their projects for this directory, ask which one
-4. Load that project's files
-5. Find incomplete features → Confirm batch → **DELEGATE TO AGENTS**
+1. Read `progress.md` (if exists) for session context
+2. Run `git log --oneline -10` for recent commit context
+3. Read `~/.phaseswarm-registry.json`
+4. Filter to projects matching current working directory (`project_root`)
+5. Show user their projects for this directory, ask which one
+6. Load that project's files (CLAUDE.md, phases.json, phase-N files)
+7. Run quality checks to verify baseline is green
+8. Find incomplete features → Confirm batch → **DELEGATE TO AGENTS**
+9. After agents complete → **VERIFY** → **UPDATE JSON** → **WRITE CHECKPOINT**
