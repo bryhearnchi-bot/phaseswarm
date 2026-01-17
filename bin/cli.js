@@ -188,7 +188,33 @@ async function init() {
       fs.writeFileSync(REGISTRY_FILE, JSON.stringify(registry, null, 2), 'utf8');
       logSuccess(`Created ${registryType} registry at ${REGISTRY_FILE}`);
     } else {
-      logWarning(`Registry already exists at ${REGISTRY_FILE}`);
+      // Registry exists - check if registry_type matches user's choice
+      try {
+        const existingContent = fs.readFileSync(REGISTRY_FILE, 'utf8');
+        const existingRegistry = JSON.parse(existingContent);
+        const existingType = existingRegistry.registry_type;
+
+        if (existingType && existingType !== registryType) {
+          logWarning(`Registry exists at ${REGISTRY_FILE}`);
+          logWarning(`  Existing type: ${existingType}, Your choice: ${registryType}`);
+          logInfo(`  Updating registry_type to '${registryType}'...`);
+          existingRegistry.registry_type = registryType;
+          fs.writeFileSync(REGISTRY_FILE, JSON.stringify(existingRegistry, null, 2), 'utf8');
+          logSuccess(`  Updated registry_type to '${registryType}'`);
+        } else if (!existingType) {
+          // Old registry without registry_type field - add it
+          logWarning(`Registry exists at ${REGISTRY_FILE} (no type set)`);
+          logInfo(`  Adding registry_type: '${registryType}'...`);
+          existingRegistry.registry_type = registryType;
+          fs.writeFileSync(REGISTRY_FILE, JSON.stringify(existingRegistry, null, 2), 'utf8');
+          logSuccess(`  Added registry_type: '${registryType}'`);
+        } else {
+          logSuccess(`Registry already exists at ${REGISTRY_FILE} (type: ${registryType})`);
+        }
+      } catch (parseErr) {
+        logWarning(`Registry exists but couldn't be parsed: ${REGISTRY_FILE}`);
+        logWarning(`  ${parseErr.message}`);
+      }
     }
   } catch (err) {
     logError(`Failed to create registry: ${err.message}`);
