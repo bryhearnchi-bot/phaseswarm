@@ -548,12 +548,22 @@ All phase files will be created in parallel, much faster than sequential creatio
 
 Add this project to the PhaseSwarm registry so `/phaseswarm-run` can find it.
 
-**Registry location:** `~/.phaseswarm-registry.json` (user's home directory)
+### Registry Location (Local vs Global)
+
+Check for registries in this order:
+1. **Local registry**: `./.phaseswarm-registry.json` (current directory)
+2. **Global registry**: `~/.phaseswarm-registry.json` (home directory)
+
+**Use whichever registry exists.** If neither exists, create a **local** registry (recommended for project isolation).
+
+### Registry Structure
 
 If the registry doesn't exist, create it:
 ```json
 {
   "registry_version": 1,
+  "registry_type": "local",
+  "created": "[today's date]",
   "projects": []
 }
 ```
@@ -562,6 +572,7 @@ Add the new project to the registry:
 ```json
 {
   "registry_version": 1,
+  "registry_type": "local",
   "projects": [
     {
       "name": "[Project Name from PRD]",
@@ -582,7 +593,7 @@ Add the new project to the registry:
 
 **IMPORTANT: `project_root` field**
 
-The `project_root` field is CRITICAL for filtering. Set it to the **current working directory** (where the user ran `/phaseswarm-create`). This ensures:
+The `project_root` field is CRITICAL for filtering (especially with global registries). Set it to the **current working directory** (where the user ran `/phaseswarm-create`). This ensures:
 - `/phaseswarm-run` only shows projects relevant to the current codebase
 - Users don't accidentally pick the wrong project when working in different directories
 - The registry stays organized even with many projects across different codebases

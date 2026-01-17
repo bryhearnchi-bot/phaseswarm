@@ -150,26 +150,32 @@ git log --oneline -10
 
 ### Step 1: Read the PhaseSwarm Registry
 
-**Registry location:** `~/.phaseswarm-registry.json`
+**Check for registries in this order:**
+1. **Local registry**: `./.phaseswarm-registry.json` (current directory)
+2. **Global registry**: `~/.phaseswarm-registry.json` (home directory)
 
-Read the registry to see all available PhaseSwarm projects.
+Use whichever registry exists. Local takes precedence over global.
 
-**IMPORTANT: Filter by current working directory**
+**Registry behavior differs by type:**
 
-Only show projects where `project_root` matches the current working directory. This ensures users only see projects relevant to the codebase they're currently in.
+**Local Registry (`./.phaseswarm-registry.json`):**
+- Show ALL projects in the registry (they're already scoped to this project)
+- No filtering needed - local registries only contain projects for this codebase
 
-```
-cwd = current working directory
-Filter projects where:
-  - project.project_root exists (skip if empty)
-  - project.project_root === cwd
-  - OR cwd is under project_root
-  - OR project_root is under cwd (user is in parent directory)
-```
+**Global Registry (`~/.phaseswarm-registry.json`):**
+- STRICTLY filter to only show projects in the current repository
+- Only show projects where:
+  ```
+  cwd = current working directory
+  Filter where:
+    - project.project_root === cwd, OR
+    - cwd is under project_root (we're inside the project)
+  Do NOT show sibling projects from other repositories
+  ```
 
 **If registry exists and has matching projects:**
 
-Show the user a list of projects for this directory:
+Show the user a list of projects:
 ```
 PhaseSwarm projects for this directory:
 
@@ -184,17 +190,20 @@ PhaseSwarm projects for this directory:
 
 Use AskUserQuestion to let them pick.
 
-**If registry exists but NO projects match the current directory:**
+**If registry exists but NO projects match:**
 
 Tell user: "No PhaseSwarm projects found for this directory. Would you like to specify a PhaseSwarm folder manually, or run `/phaseswarm-create` to create a new one?"
 
-**If registry doesn't exist or is empty:**
+**If no registry exists:**
 
-Ask user: "No PhaseSwarm projects found in registry. Where is your PhaseSwarm folder?"
+Ask user: "No PhaseSwarm registry found. Where is your PhaseSwarm folder?"
 
 **If they pick "Other":**
 
-Ask for the folder path, then offer to add it to the registry. When adding, set `project_root` to the current working directory.
+Ask for the folder path, then offer to add it to the registry. When adding:
+- Check for local registry first, then global
+- If neither exists, create a local registry
+- Set `project_root` to the current working directory
 
 ### Step 1b: Check Branch Status
 
@@ -654,8 +663,10 @@ If running via `/ralph-loop`, this workflow supports autonomous continuation:
 START SESSION:
   Read progress.md (if exists) - session context
   Run git log --oneline -10 - recent commits for context
-  Read ~/.phaseswarm-registry.json
-  → Filter projects by current working directory (project_root)
+  Check for registry:
+    → Local first: ./.phaseswarm-registry.json
+    → Then global: ~/.phaseswarm-registry.json
+  If global registry: filter to current repository only
   → Ask which project (only show matching projects)
   → Check branch: current vs registry's working_branch
   → If different: ask user to switch or stay
@@ -722,9 +733,9 @@ COMPLETE PHASE:
 
 1. Read `progress.md` (if exists) for session context
 2. Run `git log --oneline -10` for recent commit context
-3. Read `~/.phaseswarm-registry.json`
-4. Filter to projects matching current working directory (`project_root`)
-5. Show user their projects for this directory, ask which one
+3. Check for registry (local `./.phaseswarm-registry.json` first, then global `~/.phaseswarm-registry.json`)
+4. If global registry: filter to projects in current repository only
+5. Show user their projects, ask which one
 6. Load that project's files (CLAUDE.md, phases.json, phase-N files)
 7. Run quality checks to verify baseline is green
 8. Find incomplete features → Confirm batch → **DELEGATE TO AGENTS**
