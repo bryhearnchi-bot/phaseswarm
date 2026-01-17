@@ -72,13 +72,26 @@ function prompt(question) {
 
 /**
  * Get the active registry file (local takes precedence)
+ * Reads registry_type from file to handle edge cases
  */
 function getRegistryFile() {
+  // Check local first
   if (fs.existsSync(LOCAL_REGISTRY_FILE)) {
-    return { path: LOCAL_REGISTRY_FILE, type: 'local' };
+    try {
+      const content = JSON.parse(fs.readFileSync(LOCAL_REGISTRY_FILE, 'utf8'));
+      return { path: LOCAL_REGISTRY_FILE, type: content.registry_type || 'local' };
+    } catch {
+      return { path: LOCAL_REGISTRY_FILE, type: 'local' };
+    }
   }
+  // Then check global
   if (fs.existsSync(GLOBAL_REGISTRY_FILE)) {
-    return { path: GLOBAL_REGISTRY_FILE, type: 'global' };
+    try {
+      const content = JSON.parse(fs.readFileSync(GLOBAL_REGISTRY_FILE, 'utf8'));
+      return { path: GLOBAL_REGISTRY_FILE, type: content.registry_type || 'global' };
+    } catch {
+      return { path: GLOBAL_REGISTRY_FILE, type: 'global' };
+    }
   }
   return null;
 }
