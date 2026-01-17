@@ -391,55 +391,47 @@ If verification fails, keep `passes: false` and either:
 - Fix the issue (delegate to agent)
 - Note the failure in progress.md for later
 
-### After Verification: Update JSON
+### After Verification: Delegate Document Updates to Agent
 
-For each passing feature:
+**IMPORTANT: To preserve orchestrator context, delegate all document updates to an agent.**
 
-```json
-{
-  "id": 1,
-  "description": "Feature A",
-  "passes": true,  // ← Update this
-  "notes": "Completed [date]"
-}
+Launch a single agent to handle all updates:
+
+```python
+Task(
+  subagent_type="general-purpose",
+  prompt="""
+Update PhaseSwarm tracking documents after batch completion.
+
+## 1. Update phase-N.json
+
+Set `passes: true` for these completed features:
+[List feature IDs and descriptions]
+
+## 2. Update progress.md
+
+Update the checkpoint file with:
+- Last Updated: [current date and time]
+- Current Phase: [N] - [Phase Name]
+- Completed This Session: [list completed features]
+- In Progress: [next features to work on]
+- Next Up: [upcoming features]
+- Session Notes: [any discoveries or context]
+- Keep the "If Context Resets" section
+
+## 3. Commit (if configured)
+
+Commit frequency setting: [per_feature/per_batch/per_phase]
+If per_batch, commit now with message: "Complete [N] features in Phase [X]"
+
+Files to update:
+- [phaseswarm-folder]/phase-N.json
+- [phaseswarm-folder]/progress.md
+"""
+)
 ```
 
-**DO THIS IMMEDIATELY. Don't batch updates.**
-
-### After Updating: Write Progress Checkpoint
-
-**After each agent batch completes**, update `progress.md`:
-
-```markdown
-# PhaseSwarm Progress Log
-
-## Last Updated: [current date and time]
-
-### Current Phase: [N] - [Phase Name]
-
-### Completed This Session:
-- [x] Feature [ID]: [Description]
-- [x] Feature [ID]: [Description]
-
-### In Progress:
-- [ ] Feature [ID]: [Description] (just completed by agents)
-
-### Next Up:
-- Feature [ID]: [Description]
-- Feature [ID]: [Description]
-
-### Session Notes:
-- [Any discoveries, decisions, or important context]
-- [Reference files found, patterns noticed, etc.]
-
-### If Context Resets:
-1. Read this file for session context
-2. Read phases.json for current phase/status
-3. Read phase-N.json for incomplete features
-4. Continue from "In Progress" items above
-```
-
-**This checkpoint enables recovery if context is compacted.**
+**This preserves orchestrator context by offloading file writes to an agent.**
 
 ### After Updating: Commit (based on config)
 

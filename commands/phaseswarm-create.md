@@ -606,7 +606,29 @@ If branch_strategy was "New branch", create the branch now and store its name.
 
 ---
 
-## STEP 8: Provide Next Steps
+## STEP 8: Commit and Push the Plan
+
+After all files are created, commit and push to save the plan remotely:
+
+```bash
+git add [phaseswarm-folder]/
+git commit -m "Create PhaseSwarm plan: [Project Name]
+
+Phases:
+- Phase 1: [name] ([N] features)
+- Phase 2: [name] ([N] features)
+...
+
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
+
+git push -u origin [branch-name]
+```
+
+This ensures the plan is backed up remotely and can be accessed from other machines or sessions.
+
+---
+
+## STEP 9: Provide Next Steps
 
 Tell the user:
 > "PhaseSwarm created! Your plan is ready in `[folder path]`.
